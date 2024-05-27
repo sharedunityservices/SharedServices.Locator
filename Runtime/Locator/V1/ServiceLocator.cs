@@ -6,12 +6,12 @@ using UnityEngine;
 
 namespace SharedServices.Locator.V1
 {
-    public static class Service
+    public static class ServiceLocator
     {
         private static readonly Dictionary<Type, IService> Services = new();
         private static Type[] _tempAllTypes;
 
-        static Service()
+        static ServiceLocator()
         {
             GetAllTypes();
             OverrideServices();
