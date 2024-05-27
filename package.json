@@ -2,7 +2,7 @@
   "name": "com.sharedunityservices.locator",
   "displayName": "SharedServices.Locator",
   "version": "1.0.0",
-  "description": "Shared Unity Services Locator",
+  "description": "<b>Dependencies:</b> https://github.com/sharedunityservices/SharedServices..Core.git\n\n<b>SharedServices.Locator</b> is a service locator that allows you to register and resolve services. It is a part of the Shared Services Framework.",
   "unity": "2020.1",
   "author": {
     "name": "ETdoFresh",
