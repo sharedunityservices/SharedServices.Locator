@@ -1,0 +1,16 @@
+{
+    "name": "SharedServices.Locator",
+    "rootNamespace": "SharedServices.Locator",
+    "references": [
+        "GUID:d0b0179cd29a6114183d5c45b9624261"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

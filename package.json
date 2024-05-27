@@ -1,0 +1,22 @@
+{
+  "name": "com.sharedunityservices.locator",
+  "displayName": "SharedServices.Locator",
+  "version": "1.0.0",
+  "description": "Shared Unity Services Locator",
+  "unity": "2020.1",
+  "author": {
+    "name": "ETdoFresh",
+    "email": "etdofresh@gmail.com",
+    "url": "https://github.com/sharedunityservices"
+  },
+  "dependencies": {
+    "com.sharedunityservices.core": "1.0.0"
+  },
+  "samples": [
+    {
+      "displayName": "Override Service",
+      "description": "A sample demonstrating how override a service if more than one concrete implementation is available",
+      "path": "Samples~/OverrideService"
+    }
+  ]
+}
