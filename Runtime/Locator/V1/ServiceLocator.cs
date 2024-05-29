@@ -17,6 +17,7 @@ namespace SharedServices.Locator.V1
             OverrideServices();
             AutoDetectServices();
             ClearAllTypes();
+            InitializeAllServices();
         }
 
         public static T Get<T>() where T : IService
@@ -88,14 +89,29 @@ namespace SharedServices.Locator.V1
                     }
                 }
             }
-
-            foreach (var service in Services.Values) 
-                service.Initialize();
         }
 
         private static void ClearAllTypes()
         {
             _tempAllTypes = null;
+        }
+
+        private static void InitializeAllServices()
+        {
+            foreach (var service in Services.Values)
+            {
+                try
+                {
+                    service.Initialize();
+                }
+                catch (Exception e)
+                {
+#if UNITY_EDITOR
+                    if (Application.isPlaying) throw;
+                    Debug.LogWarning($"Failed to initialize service {service.GetType().Name}: {e.Message}");
+#endif
+                }
+            }
         }
     }
 }
