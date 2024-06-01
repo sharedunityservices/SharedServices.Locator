@@ -10,7 +10,8 @@
     "url": "https://github.com/sharedunityservices"
   },
   "dependencies": {
-    "com.sharedunityservices.core": "1.0.0"
+    "com.sharedunityservices.core": "1.0.0",
+    "com.sharedunityservices.log": "1.0.0"
   },
   "samples": [
     {

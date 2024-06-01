@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using SharedServices.Log;
 using SharedServices.V1;
+using UnityEditor;
 using UnityEngine;
 
 namespace SharedServices.Locator.V1
@@ -44,7 +46,8 @@ namespace SharedServices.Locator.V1
         private static void OverrideServices()
         {
             var overrideServices = _tempAllTypes
-                .Where(type => typeof(IOverrideServices).IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract);
+                .Where(type =>
+                    typeof(IOverrideServices).IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract);
 
             foreach (var overrideService in overrideServices)
             {
@@ -71,7 +74,7 @@ namespace SharedServices.Locator.V1
             foreach (var serviceType in serviceTypes)
             {
                 if (Services.ContainsKey(serviceType)) continue;
-                    
+
                 foreach (var serviceInterfaceType in serviceType.GetInterfaces().Where(type =>
                              type != typeof(IService) && typeof(IService).IsAssignableFrom(type)))
                 {
@@ -103,12 +106,22 @@ namespace SharedServices.Locator.V1
                 try
                 {
                     service.Initialize();
+#if UNITY_EDITOR
+                    var context = AssetDatabase
+                        .FindAssets("t:MonoScript " + service.GetType().Name)
+                        .Select(AssetDatabase.GUIDToAssetPath)
+                        .Select(AssetDatabase.LoadAssetAtPath<MonoScript>)
+                        .FirstOrDefault(script => script.GetClass() == service.GetType());
+                    ILog.Debug($"Initialized service {service.GetType().Name}", context);
+#else
+                    ILog.Debug($"Initialized service {service.GetType().Name}");
+#endif
                 }
                 catch (Exception e)
                 {
 #if UNITY_EDITOR
                     if (Application.isPlaying) throw;
-                    Debug.LogWarning($"Failed to initialize service {service.GetType().Name}: {e.Message}");
+                    ILog.Warn($"Failed to initialize service {service.GetType().Name}: {e.Message}");
 #endif
                 }
             }
