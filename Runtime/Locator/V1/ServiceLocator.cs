@@ -15,6 +15,7 @@ namespace SharedServices.Locator.V1
 
         static ServiceLocator()
         {
+            ILog.Trace("ServiceLocator initializing...");
             GetAllTypes();
             OverrideServices();
             AutoDetectServices();
@@ -30,17 +31,19 @@ namespace SharedServices.Locator.V1
             var serviceType = typeof(T);
             if (Services.TryGetValue(serviceType, out var service))
                 return (T)service;
-
-            Debug.LogWarning($"Service {serviceType} not found");
+            
+            ILog.Warn($"Service {serviceType} not found");
             return default;
         }
 
         private static void GetAllTypes()
         {
+            ILog.Trace("Getting all types...");
             _tempAllTypes = AppDomain.CurrentDomain
                 .GetAssemblies()
                 .SelectMany(assembly => assembly.GetTypes())
                 .ToArray();
+            ILog.Trace($"Found {_tempAllTypes.Length} types");
         }
 
         private static void OverrideServices()
@@ -60,7 +63,7 @@ namespace SharedServices.Locator.V1
                 {
 #if UNITY_EDITOR
                     if (Application.isPlaying) throw;
-                    Debug.LogWarning($"Failed to override services with {overrideService.Name}: {e.Message}");
+                    ILog.Warn($"Failed to override services with {overrideService.Name}: {e.Message}");
 #endif
                 }
             }
@@ -87,7 +90,7 @@ namespace SharedServices.Locator.V1
                     {
 #if UNITY_EDITOR
                         if (Application.isPlaying) throw;
-                        Debug.LogWarning($"Failed to create service {serviceType.Name}: {e.Message}");
+                        ILog.Warn($"Failed to create service {serviceType.Name}: {e.Message}");
 #endif
                     }
                 }
