@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using SharedServices.Files.V1;
 using SharedServices.Log;
 using SharedServices.V1;
 using UnityEditor;
@@ -12,15 +13,26 @@ namespace SharedServices.Locator.V1
     {
         private static readonly Dictionary<Type, IService> Services = new();
         private static Type[] _tempAllTypes;
+        private static Type Context => typeof(ServiceLocator);
 
         static ServiceLocator()
         {
-            ILog.Trace("ServiceLocator initializing...");
-            GetAllTypes();
-            OverrideServices();
-            AutoDetectServices();
-            ClearAllTypes();
+            InitializeLogService();
+            GetAllServiceTypes();
+            CreateInstancesOfOverrideServices();
+            AutoCreateInstancesOfFirstFoundServices();
+            ILog.Trace("All Service Instances Created!", Context);
+            ReleaseAllTypesFromMemory();
             InitializeAllServices();
+        }
+
+        private static void InitializeLogService()
+        {
+            // Required so we can ILog.Trace before other services are created and initialized
+            Services[typeof(IFileService)] = new FallbackPathFileService();
+            Services[typeof(IFileService)].Initialize();
+            Services[typeof(ILog)] = new Log.Log();
+            Services[typeof(ILog)].Initialize();
         }
 
         public static T Get<T>() where T : IService
@@ -32,21 +44,21 @@ namespace SharedServices.Locator.V1
             if (Services.TryGetValue(serviceType, out var service))
                 return (T)service;
             
-            ILog.Warn($"Service {serviceType} not found");
+            ILog.Warn($"Service {serviceType} not found", Context);
             return default;
         }
 
-        private static void GetAllTypes()
+        private static void GetAllServiceTypes()
         {
-            ILog.Trace("Getting all types...");
+            ILog.Trace("Getting all types...", Context);
             _tempAllTypes = AppDomain.CurrentDomain
                 .GetAssemblies()
                 .SelectMany(assembly => assembly.GetTypes())
                 .ToArray();
-            ILog.Trace($"Found {_tempAllTypes.Length} types");
+            ILog.Trace($"Found {_tempAllTypes.Length} types", Context);
         }
 
-        private static void OverrideServices()
+        private static void CreateInstancesOfOverrideServices()
         {
             var overrideServices = _tempAllTypes
                 .Where(type =>
@@ -56,6 +68,7 @@ namespace SharedServices.Locator.V1
             {
                 try
                 {
+                    ILog.Trace($"Found Override Service Class: {overrideService.Name}", Context);
                     var service = (IOverrideServices)Activator.CreateInstance(overrideService);
                     service.OverrideServices(Services);
                 }
@@ -63,13 +76,13 @@ namespace SharedServices.Locator.V1
                 {
 #if UNITY_EDITOR
                     if (Application.isPlaying) throw;
-                    ILog.Warn($"Failed to override services with {overrideService.Name}: {e.Message}");
+                    ILog.Warn($"Failed to override services with {overrideService.Name}: {e.Message}", Context);
 #endif
                 }
             }
         }
 
-        private static void AutoDetectServices()
+        private static void AutoCreateInstancesOfFirstFoundServices()
         {
             var serviceTypes = _tempAllTypes
                 .Where(type => typeof(IService).IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract);
@@ -83,22 +96,24 @@ namespace SharedServices.Locator.V1
                 {
                     try
                     {
-                        if (!Services.ContainsKey(serviceInterfaceType))
-                            Services.Add(serviceInterfaceType, (IService)Activator.CreateInstance(serviceType));
+                        if (Services.ContainsKey(serviceInterfaceType)) continue;
+                        ILog.Trace($"Creating instance of {serviceType.Name} for {serviceInterfaceType.Name}", Context); 
+                        Services.Add(serviceInterfaceType, (IService)Activator.CreateInstance(serviceType));
                     }
                     catch (Exception e)
                     {
 #if UNITY_EDITOR
                         if (Application.isPlaying) throw;
-                        ILog.Warn($"Failed to create service {serviceType.Name}: {e.Message}");
+                        ILog.Warn($"Failed to create service {serviceType.Name}: {e.Message}", Context);
 #endif
                     }
                 }
             }
         }
 
-        private static void ClearAllTypes()
+        private static void ReleaseAllTypesFromMemory()
         {
+            ILog.Trace("Releasing all types from memory...", Context);
             _tempAllTypes = null;
         }
 
@@ -106,6 +121,9 @@ namespace SharedServices.Locator.V1
         {
             foreach (var service in Services.Values)
             {
+                if (service is ILog) continue;
+                if (service is IFileService) continue;
+                
                 try
                 {
                     service.Initialize();
@@ -115,16 +133,16 @@ namespace SharedServices.Locator.V1
                         .Select(AssetDatabase.GUIDToAssetPath)
                         .Select(AssetDatabase.LoadAssetAtPath<MonoScript>)
                         .FirstOrDefault(script => script.GetClass() == service.GetType());
-                    ILog.Debug($"Initialized service {service.GetType().Name}", context);
+                    ILog.Debug("Initialized service", context);
 #else
-                    ILog.Debug($"Initialized service {service.GetType().Name}");
+                    ILog.Debug($"Initialized service {service.GetType().Name}", Context); 
 #endif
                 }
                 catch (Exception e)
                 {
 #if UNITY_EDITOR
                     if (Application.isPlaying) throw;
-                    ILog.Warn($"Failed to initialize service {service.GetType().Name}: {e.Message}");
+                    ILog.Warn($"Failed to initialize service {service.GetType().Name}: {e.Message}", Context);
 #endif
                 }
             }
