@@ -140,8 +140,8 @@ namespace SharedServices.Locator.V1
                 }
                 catch (Exception e)
                 {
-#if UNITY_EDITOR
                     if (Application.isPlaying) throw;
+#if UNITY_EDITOR
                     ILog.Warn($"Failed to initialize service {service.GetType().Name}: {e.Message}", Context);
 #endif
                 }
