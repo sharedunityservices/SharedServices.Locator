@@ -47,6 +47,18 @@ namespace SharedServices.Locator.V1
             ILog.Warn($"Service {serviceType} not found", Context);
             return default;
         }
+        
+        public static IService Get(Type serviceType)
+        {
+            if (!serviceType.IsInterface)
+                throw new ArgumentException($"Type <{serviceType.Name}> must be an interface");
+
+            if (Services.TryGetValue(serviceType, out var service))
+                return service;
+            
+            ILog.Warn($"Service {serviceType} not found", Context);
+            return null;
+        }
 
         private static void GetAllServiceTypes()
         {
