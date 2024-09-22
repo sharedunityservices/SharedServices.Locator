@@ -6,6 +6,7 @@ using SharedServices.Log;
 using SharedServices.V1;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace SharedServices.Locator.V1
 {
@@ -48,6 +49,7 @@ namespace SharedServices.Locator.V1
             return default;
         }
         
+        [Preserve]
         public static IService Get(Type serviceType)
         {
             if (!serviceType.IsInterface)
